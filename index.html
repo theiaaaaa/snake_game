@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Snake Game</title>
+    <style>
+        #snake {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+    </style>
+</head>
+<body>
+    Level
+    <select id="level">
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+        <option value="6">6</option>
+        <option value="7">7</option>
+        <option value="8">8</option>
+        <option value="9">9</option>
+        <option value="10">10</option>
+    </select>
+    <button id="play">Play</button>
+    <p id="score">Score: 0</p>
+    <canvas id="snake" width="200" height="200"></canvas>
+
+<script>
+    var snake = []
+    var changeDir = false
+    var food = {}
+    var dx = 10, dy = 0
+    var speed = 6, score = 0
+    var colors = [
+    "#c62828", "#ad1457", "#e91e63", "#f48fb1", "#ce93d8", "#9c27b0", "#6a1b9a", "#4527a0", "#673ab7", "#b39ddb", "#9fa8da", "#3f51b5", "#283593", "#1565c0", "#2196f3", "#90caf9", "#81d4fa", "#03a9f4", "#0277bd", "#00838f", "#00bcd4", "#80deea", "#80cbc4", "#009688", "#00695c", "#2e7d32", "#4caf50", "#a5d6a7", "#c5e1a5", "#8bc34a",
+    "#558b2f", "#9e9d24", "#cddc39", "#e6ee9c", "#fff59d", "#ffeb3b", "#f9a825", "#ff8f00", "#ffc107", "#ffe082", "#ffcc80", "#ff9800", "#ef6c00", "#d84315", "#ff5722", "#ffab91"
+    ]
+
+    const box = document.getElementById("snake")
+    const board = box.getContext("2d")
+
+    const scoreTag = document.getElementById('score')
+    scoreTag.innerText = "Score: "+score
+
+    document.getElementById('level').value = "6"
+
+    document.getElementById('level').addEventListener("change", ChangeSpeed)
+
+    document.getElementById("play").addEventListener("click", StartGame)
+
+    var looping = null
+    GenerateFood()
+
+    document.addEventListener( "keydown", ChangeDirection )
+
+    function InitGame()
+    {
+        snake = [
+            {x: 50, y: 100},
+            {x: 40, y: 100},
+            {x: 30, y: 100},
+            {x: 20, y: 100},
+            {x: 10, y: 100}
+        ]
+        Loop()
+    }
+    InitGame()
+
+    function StartGame()
+    {
+        InitGame()
+        looping = setInterval( Loop, 1000 / ( 2*speed ))
+    }
+
+    function Loop()
+    {
+        if( IsGameOver() ) {
+            clearInterval( looping )
+            score = 0
+            return
+        }
+        changeDir = false
+        ClearBoard()
+        DrawFood()
+        MoveSnake()
+        DrawSnake()
+    }
+
+    function MoveSnake()
+    {
+        var head = {
+            x: snake[0].x + dx,
+            y: snake[0].y + dy
+        }
+        snake.unshift( head )
+        var hasEatenFood = snake[0].x === food.x && snake[0].y === food.y
+        if( hasEatenFood )
+        {
+            GenerateFood()
+            score += speed
+            scoreTag.innerText = "Score: "+score
+        }
+        else snake.pop()
+    }
+
+    function DrawSnake()
+    {
+        snake.forEach( function( block, i ) {
+            board.beginPath()
+            board.arc( block.x+5, block.y+5, 5, 0, Math.PI*2 )
+            board.fillStyle = colors[i]
+            board.fill()
+        })
+    }
+
+    function ClearBoard()
+    {
+        board.fillStyle = "white"
+        board.strokeStyle = "black"
+        board.fillRect( 0, 0, box.width, box.height )
+        board.strokeRect( 0, 0, box.width, box.height )
+    }
+
+    function IsGameOver()
+    {
+        for( var i=4; i<snake.length; i++)
+        {
+            if(snake[i].x === snake[0].x && snake[i].y === snake[0].y)
+                return true
+        }
+        const lw = snake[0].x < 0
+        const rw = snake[0].x > box.width - 10
+        const tw = snake[0].y < 0
+        const bw = snake[0].y > box.height - 10
+        return lw || rw || tw || bw
+    }
+
+    function ChangeDirection( e )
+    {
+        const lk=37, rk=39, uk=38, dk=40
+
+        if( changeDir ) return
+        changeDir = true
+
+        let k = e.keyCode
+        let toUp = dy === -10,
+            toDown = dy === 10,
+            toLeft = dx === -10,
+            toRight = dx === 10
+
+        if( k === lk && !toRight ) {
+            dx = -10, dy = 0
+        }
+        if( k === rk && !toLeft ) {
+            dx = 10, dy = 0
+        }
+        if( k === uk && !toDown ) {
+            dx = 0, dy = -10
+        }
+        if( k === dk && !toUp ) {
+            dx = 0, dy = 10
+        }
+    }
+
+    function GenerateFood()
+    {
+        food.x = randPos( 0, box.width - 10 )
+        food.y = randPos( 0, box.height - 10 )
+        snake.forEach( function( block ) {
+            var eaten = block.x == food.x && block.y == food.y
+            if(eaten) GenerateFood()
+        })
+    }
+
+    function randPos(min, max)
+    {
+        return Math.round((Math.random() * (max-min) + min) / 10) * 10
+    }
+
+    function DrawFood()
+    {
+        board.beginPath()
+        board.arc( food.x+5, food.y+5, 5, 0, Math.PI*2 )
+        board.fillStyle = "red"
+        board.fill()
+    }
+
+    function ChangeSpeed()
+    {
+        speed = parseInt(this.value)
+    }    
+</script>
+</body>
+</html>
